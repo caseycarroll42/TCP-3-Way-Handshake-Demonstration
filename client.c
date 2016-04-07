@@ -2,11 +2,15 @@
 #include <stdlib.h>
 #include <netdb.h>
 #include <netinet/in.h>
+#include <arpa/inet.h>
 #include <string.h>
 
 int main(int argc, char **argv)
 {
 	int portno, sockfd;
+	struct sockaddr_in serv_addr;
+	struct hostnet *server;
+
 
 	//check if user passed port number as argument
 	if (argc < 2) {
@@ -28,6 +32,12 @@ int main(int argc, char **argv)
    	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr=inet_addr("129.120.151.94"); //IP for cse01.cse.unt.edu
    	serv_addr.sin_port = htons(portno);
+
+   	/* Connecting to the server */
+	if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
+		printf("ERROR while attempting to  connect");
+		exit(1);
+	}
 
 	return 0;
 }
