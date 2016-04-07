@@ -30,7 +30,7 @@ int main(int argc, char **argv)
    	}
 
    	serv_addr.sin_family = AF_INET;
-	serv_addr.sin_addr.s_addr=inet_addr("129.120.151.94"); //IP for cse01.cse.unt.edu
+      serv_addr.sin_addr.s_addr=inet_addr("129.120.151.94"); //IP for cse01.cse.unt.edu
    	serv_addr.sin_port = htons(portno);
 
    	/* Connecting to the server */

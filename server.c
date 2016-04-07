@@ -11,7 +11,7 @@ int connect_to_client(int serv_sock);
 int main(int argc, char **argv)
 {
 	int serv_sock = server_socket();
-	int accept_sock = connect_to_client();
+	int accept_sock = connect_to_client(serv_sock);
 	
 	return 0;
 }
