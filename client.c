@@ -20,15 +20,12 @@ struct tcp_hdr
     int opt;
 };
 
-int connect_to_server(int portno);
-
 int main(int argc, char **argv)
 {
-	int portno;
+	int portno, sockfd;
 	int num_attempts = 0;
 	struct sockaddr_in serv_addr;
 	struct hostnet *server;
-
 
 	//check if user passed port number as argument
 	if (argc < 2) {
@@ -38,36 +35,13 @@ int main(int argc, char **argv)
 
 	//set port number from user input
 	portno = atoi(argv[1]);	
-
-	//attempts to connect to server three times
-	while(num_attempts < 2)
-	{
-		if(connect_to_server(portno) == 0)
-		{
-			//successful connection, break out of loop
-			num_attempts = 2;
-		} else {
-			printf("attempting to connect again...\n");
-		}
-
-		num_attempts++;
-	}
-
-	return 0;
-}
-
-int connect_to_server(int portno)
-{
-	int sockfd;
-	struct sockaddr_in serv_addr;
-	struct hostnet *server;
    	
    	//create socket
    	sockfd = socket(AF_INET, SOCK_STREAM, 0);
    	if(sockfd < 0 )
    	{
    		printf("Error creating socket\n");
-   		return(-1);
+   		exit(1);
    	}
 
    	serv_addr.sin_family = AF_INET;
@@ -77,8 +51,8 @@ int connect_to_server(int portno)
    	/* Connecting to the server */
 	if (connect(sockfd, (struct sockaddr*)&serv_addr, sizeof(serv_addr)) < 0) {
 		printf("ERROR while attempting to  connect");
-		return(-1);
+		exit(1);
 	}
 
-	return 0;//success
+	return 0;
 }
