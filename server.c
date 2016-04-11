@@ -3,7 +3,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 
-#define PORT_NO 666420
+#define PORT_NO 6664
 
 int server_socket();
 int connect_to_client(int serv_sock);
