@@ -5,6 +5,7 @@
 #include <arpa/inet.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <unistd.h>
 
 
 //initialize TCP header struct
@@ -30,19 +31,18 @@ enum {
 };
 
 int connect_to_server(int portno);
-//computes checksum
-unsigned int compute_cksum(unsigned short int * cksum_arr);
+unsigned int compute_cksum(unsigned short int * cksum_arr); //computes checksum
+int send_conn_request(uint32_t source_port, int portno, int sockfd); //Create a connection request TCP segment
+int recv_conn_grant_request(int sockfd);
 
 int main(int argc, char **argv)
 {
-	int portno, sockfd, local_addr_len, num_sent, num_recv;
+	int portno, sockfd, num_sent, num_recv;
+  socklen_t local_addr_len;
 	int num_attempts = 0;	
   struct sockaddr_in local_addr;
-	struct hostnet *server;
-  struct tcp_hdr tcp_seg;
-  struct tcp_hdr conn_grant;
-  unsigned short int cksum_arr[12];
-  char tcp_char_segment[255];
+	struct hostnet *server;  
+  struct tcp_hdr conn_grant;    
 
 	//check if user passed port number as argument
 	if (argc < 2) {
@@ -57,28 +57,8 @@ int main(int argc, char **argv)
   local_addr_len = sizeof(local_addr);
   getsockname(sockfd, (struct sockaddr *)&local_addr, &local_addr_len);  
 
-  /*set up connection request tcp struct*/
-  tcp_seg.src = ntohs(local_addr.sin_port); //set source port
-  tcp_seg.des = portno; //set destination port
-  tcp_seg.seq = 0; //Assign an initial client sequence number with 
-  tcp_seg.ack = 0; //a zero acknowledgement number
-  tcp_seg.hdr_flags |= SYN; //set the SYN bit to 1
-  tcp_seg.rec = 0;
-  tcp_seg.cksum = 0; 
-  tcp_seg.ptr = 0;
-  tcp_seg.opt = 0;
-
-  memcpy(cksum_arr, &tcp_seg, 24); //Copying 24 bytes
-  tcp_seg.cksum = compute_cksum(cksum_arr); //compute checksum
-
-  /* send TCP struct to server */
-  memcpy(tcp_char_segment, &tcp_seg, sizeof(tcp_seg)); //copy struct to char array
-  num_sent = write(sockfd, tcp_char_segment, 255); //write to socket
-  if (num_sent < 0)
-  {
-    printf("error writing to socket...\n");
-    exit(1);
-  }
+  //send the connection request
+  send_conn_request(htons(local_addr.sin_port), portno, sockfd);
 
   /* read in connection granted segment */
   bzero(tcp_char_segment,255); //clear buffer
@@ -160,4 +140,48 @@ unsigned int compute_cksum(unsigned short int * cksum_arr)
   /* XOR the sum for checksum */
   printf("Checksum Value: 0x%04X\n", (0xFFFF^cksum)); //print result
   return (0xFFFF^cksum);
+}
+
+/*
+SEND CONNECTION REQUEST
+  i. Assign an initial client sequence number with a zero acknowledgement
+  number
+  ii. Set the SYN bit to 1
+  iii. Compute the 16-bit checksum of the entire TCP segment and populate the checksum field
+*/
+
+int send_conn_request(uint32_t source_port, int portno, int sockfd)
+{
+  struct tcp_hdr tcp_seg;
+  unsigned short int cksum_arr[12];
+  char tcp_char_segment[255];
+  
+  /*set up connection request tcp struct*/
+  tcp_seg.src = source_port; //set source port
+  tcp_seg.des = portno; //set destination port
+  tcp_seg.seq = 0; //Assign an initial client sequence number with 
+  tcp_seg.ack = 0; //a zero acknowledgement number
+  tcp_seg.hdr_flags |= SYN; //set the SYN bit to 1
+  tcp_seg.rec = 0;
+  tcp_seg.cksum = 0; 
+  tcp_seg.ptr = 0;
+  tcp_seg.opt = 0;
+
+  memcpy(cksum_arr, &tcp_seg, 24); //Copying 24 bytes
+  tcp_seg.cksum = compute_cksum(cksum_arr); //compute checksum
+
+  /* send TCP struct to server */
+  memcpy(tcp_char_segment, &tcp_seg, sizeof(tcp_seg)); //copy struct to char array
+  num_sent = write(sockfd, tcp_char_segment, 255); //write to socket
+  if (num_sent < 0)
+  {
+    printf("error writing to socket...\n");
+    exit(1);
+  }
+  return 0; 
+}
+
+int recv_conn_grant_request(int sockfd)
+{
+  return 0;
 }
