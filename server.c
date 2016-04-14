@@ -38,6 +38,7 @@ int main(int argc, char **argv)
 	int num_data_recv, num_sent;
 	unsigned short int cksum_arr[12];  	
 	struct tcp_hdr tcp_seg;
+	struct tcp_hdr tcp_ack_seg;
 
 	int serv_sock = server_socket();
 	int accept_sock = connect_to_client(serv_sock);
@@ -87,6 +88,17 @@ int main(int argc, char **argv)
 	  exit(1);
 	}
 
+	/* receive acknowledgement TCP segment from client */
+	bzero(buffer,255);
+
+	num_data_recv = read(accept_sock, buffer, 255);
+	if (num_data_recv < 0)
+	{
+		printf("error receiving data from socket\n");
+		exit(1);
+	}
+
+	memcpy(&tcp_ack_seg, buffer, sizeof tcp_ack_seg);
 	return 0;
 }
 
