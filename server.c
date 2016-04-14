@@ -33,6 +33,7 @@ int server_socket();
 int connect_to_client(int serv_sock);
 unsigned int compute_cksum(unsigned short int * cksum_arr); //computes checksum
 int recv_conn_req(int accept_sock);
+int recv_ack_seg(int accept_sock);
 
 int main(int argc, char **argv)
 {
@@ -44,19 +45,6 @@ int main(int argc, char **argv)
 	int serv_sock = server_socket();
 	int accept_sock = connect_to_client(serv_sock);
 
-	
-
-	/* receive acknowledgement TCP segment from client */
-	bzero(buffer,255);
-
-	num_data_recv = read(accept_sock, buffer, 255);
-	if (num_data_recv < 0)
-	{
-		printf("error receiving data from socket\n");
-		exit(1);
-	}
-
-	memcpy(&tcp_ack_seg, buffer, sizeof tcp_ack_seg);
 	return 0;
 }
 
@@ -145,6 +133,7 @@ unsigned int compute_cksum(unsigned short int * cksum_arr)
   return (0xFFFF^cksum);
 }
 
+//The server responds to the request by creating a connection granted TCP segment. 
 int recv_conn_req(int accept_sock)
 {
 	int num_data_recv, num_sent;
@@ -196,5 +185,24 @@ int recv_conn_req(int accept_sock)
 	  printf("error writing to socket...\n");
 	  exit(1);
 	}	
+	return 0;
+}
+
+//receive the acknowledgement segment from the client
+int recv_ack_seg(int accept_sock)
+{
+	int num_data_recv;
+	char buffer[255];
+	struct tcp_hdr tcp_ack_seg;
+
+	/* receive acknowledgement TCP segment from client */
+	num_data_recv = read(accept_sock, buffer, 255);
+	if (num_data_recv < 0)
+	{
+		printf("error receiving data from socket\n");
+		exit(1);
+	}
+
+	memcpy(&tcp_ack_seg, buffer, sizeof tcp_ack_seg);
 	return 0;
 }

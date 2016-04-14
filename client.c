@@ -60,8 +60,8 @@ int main(int argc, char **argv)
   //send the connection request
   send_conn_request(htons(local_addr.sin_port), portno, sockfd);
 
-  
-
+  //receive response and send acknowledgement tcp segment
+  send_ack_tcp_seg(sockfd);  
   
 	return 0;
 }
