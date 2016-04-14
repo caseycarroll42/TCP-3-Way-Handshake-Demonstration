@@ -3,6 +3,7 @@
 #include <netdb.h>
 #include <netinet/in.h>
 #include <string.h>
+#include <unistd.h>
 
 #define PORT_NO 6664
 
@@ -31,62 +32,19 @@ enum {
 int server_socket();
 int connect_to_client(int serv_sock);
 unsigned int compute_cksum(unsigned short int * cksum_arr); //computes checksum
+int recv_conn_req(int accept_sock);
 
 int main(int argc, char **argv)
 {
 	char buffer[255];
-	int num_data_recv, num_sent;
-	unsigned short int cksum_arr[12];  	
+	int num_data_recv, num_sent;	  	
 	struct tcp_hdr tcp_seg;
 	struct tcp_hdr tcp_ack_seg;
 
 	int serv_sock = server_socket();
 	int accept_sock = connect_to_client(serv_sock);
 
-	num_data_recv = read(accept_sock, buffer, 255);
-	if(num_data_recv < 0)
-	{
-		printf("error receiving from socket\n");
-		exit(1);
-	}
-
-	memcpy(&tcp_seg, buffer, sizeof(tcp_seg));
-
-	/*Print out tcp connection request */
-	printf("-----connection request----\n");
-	printf("source port:\t\t%hu\n", tcp_seg.src);
-	printf("destination:\t\t%hu\n", tcp_seg.des);
-	printf("sequence:\t\t%d\n", tcp_seg.seq);
-	printf("acknowledgement:\t%d\n", tcp_seg.ack);
-	printf("hdr flags:\t\t%hu\n", tcp_seg.hdr_flags);
-	printf("receive window:\t\t%hu\n", tcp_seg.rec);
-	printf("checksum:\t\t%hu\n", tcp_seg.cksum);
-	printf("data pointer:\t\t%hu\n", tcp_seg.ptr);
-	printf("options:\t\t%d\n", tcp_seg.opt);
-	printf("-----------\n\n");
-
-	//set SYN bit to and ACK bit to 1
-	tcp_seg.hdr_flags |= (SYN | ACK);
-
-	//Assign an initial server sequence number with an acknowledgement number equal to initial client sequence number + 1
-	tcp_seg.ack = tcp_seg.seq + 1;
-	tcp_seg.seq = tcp_seg.ack;
 	
-	tcp_seg.src = tcp_seg.des;
-	tcp_seg.des = tcp_seg.src; //change the source and destination to go back to client
-	
-	/* compute checksum */
-	memcpy(cksum_arr, &tcp_seg, 24); //Copying 24 bytes
-  	tcp_seg.cksum = compute_cksum(cksum_arr); //compute checksum
-
-	/* send connection granted segment to client */
-	memcpy(buffer, &tcp_seg, sizeof tcp_seg);	//copy segment to char buffer
-	num_sent = write(accept_sock, buffer, 255); //send buffer to client
-	if (num_sent < 0)
-	{
-	  printf("error writing to socket...\n");
-	  exit(1);
-	}
 
 	/* receive acknowledgement TCP segment from client */
 	bzero(buffer,255);
@@ -185,4 +143,58 @@ unsigned int compute_cksum(unsigned short int * cksum_arr)
   /* XOR the sum for checksum */
   printf("Checksum Value: 0x%04X\n", (0xFFFF^cksum)); //print result
   return (0xFFFF^cksum);
+}
+
+int recv_conn_req(int accept_sock)
+{
+	int num_data_recv, num_sent;
+	char buffer[255];
+	struct tcp_hdr tcp_seg;
+	unsigned short int cksum_arr[12];
+
+	num_data_recv = read(accept_sock, buffer, 255);
+	if(num_data_recv < 0)
+	{
+		printf("error receiving from socket\n");
+		exit(1);
+	}
+
+	memcpy(&tcp_seg, buffer, sizeof(tcp_seg));
+
+	/*Print out tcp connection request */
+	printf("-----connection request----\n");
+	printf("source port:\t\t%hu\n", tcp_seg.src);
+	printf("destination:\t\t%hu\n", tcp_seg.des);
+	printf("sequence:\t\t%d\n", tcp_seg.seq);
+	printf("acknowledgement:\t%d\n", tcp_seg.ack);
+	printf("hdr flags:\t\t%hu\n", tcp_seg.hdr_flags);
+	printf("receive window:\t\t%hu\n", tcp_seg.rec);
+	printf("checksum:\t\t%hu\n", tcp_seg.cksum);
+	printf("data pointer:\t\t%hu\n", tcp_seg.ptr);
+	printf("options:\t\t%d\n", tcp_seg.opt);
+	printf("-----------\n\n");
+
+	//set SYN bit to and ACK bit to 1
+	tcp_seg.hdr_flags |= (SYN | ACK);
+
+	//Assign an initial server sequence number with an acknowledgement number equal to initial client sequence number + 1
+	tcp_seg.ack = tcp_seg.seq + 1;
+	tcp_seg.seq = tcp_seg.ack;
+	
+	tcp_seg.src = tcp_seg.des;
+	tcp_seg.des = tcp_seg.src; //change the source and destination to go back to client
+	
+	/* compute checksum */
+	memcpy(cksum_arr, &tcp_seg, 24); //Copying 24 bytes
+  	tcp_seg.cksum = compute_cksum(cksum_arr); //compute checksum
+
+	/* send connection granted segment to client */
+	memcpy(buffer, &tcp_seg, sizeof tcp_seg);	//copy segment to char buffer
+	num_sent = write(accept_sock, buffer, 255); //send buffer to client
+	if (num_sent < 0)
+	{
+	  printf("error writing to socket...\n");
+	  exit(1);
+	}	
+	return 0;
 }
