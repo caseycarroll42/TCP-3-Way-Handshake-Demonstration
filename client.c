@@ -33,11 +33,11 @@ enum {
 int connect_to_server(int portno);
 unsigned int compute_cksum(unsigned short int * cksum_arr); //computes checksum
 int send_conn_request(uint32_t source_port, int portno, int sockfd); //Create a connection request TCP segment
-int recv_conn_grant_request(int sockfd);
+int send_ack_tcp_seg(int sockfd);
 
 int main(int argc, char **argv)
 {
-	int portno, sockfd, num_sent, num_recv;
+	int portno, sockfd;
   socklen_t local_addr_len;
 	int num_attempts = 0;	
   struct sockaddr_in local_addr;
@@ -60,37 +60,7 @@ int main(int argc, char **argv)
   //send the connection request
   send_conn_request(htons(local_addr.sin_port), portno, sockfd);
 
-  /* read in connection granted segment */
-  bzero(tcp_char_segment,255); //clear buffer
-  num_recv = read(sockfd, tcp_char_segment, 255); //read from socket
-  if(num_recv < 0)
-  {
-    printf("error reading from socket...\n");
-    exit(1);
-  }
-  memcpy(&conn_grant, tcp_char_segment, sizeof conn_grant); //copy buffer to segment
-
-  //Assign a sequence number as initial client sequence number + 1 with an acknowledgement number equal to initial server sequence number + 1
-  conn_grant.seq += 1;
-  conn_grant.ack += 1;
   
-  //Set the ACK bit to 1
-  conn_grant.hdr_flags |= ACK;
-  
-  //Compute the 16-bit checksum of the entire TCP segment and populate the checksum field
-  bzero(cksum_arr, 24);
-  memcpy(cksum_arr, &conn_grant, 24);
-  conn_grant.cksum = compute_cksum(cksum_arr);
-
-  //respond to server with acknowledgent TCP segment
-  bzero(tcp_char_segment,255);
-  memcpy(tcp_char_segment, &conn_grant, sizeof conn_grant);
-  num_sent = write(sockfd, tcp_char_segment, 255); //write back to server
-  if (num_sent < 0)
-  {
-    printf("error writing to socket...\n");
-    exit(1);
-  }
 
   
 	return 0;
@@ -152,6 +122,7 @@ SEND CONNECTION REQUEST
 
 int send_conn_request(uint32_t source_port, int portno, int sockfd)
 {
+  int num_sent;
   struct tcp_hdr tcp_seg;
   unsigned short int cksum_arr[12];
   char tcp_char_segment[255];
@@ -181,7 +152,43 @@ int send_conn_request(uint32_t source_port, int portno, int sockfd)
   return 0; 
 }
 
-int recv_conn_grant_request(int sockfd)
+int send_ack_tcp_seg(int sockfd)
 {
+  int num_recv, num_sent;
+  char tcp_char_seg[255];
+  unsigned short int cksum_arr[12];
+  struct tcp_hdr conn_grant_seg;
+  
+  /* read in connection granted segment */
+  num_recv = read(sockfd, tcp_char_seg, 255); //read from socket
+  if(num_recv < 0)
+  {
+    printf("error reading from socket...\n");
+    exit(1);
+  }
+
+  memcpy(&conn_grant_seg, tcp_char_seg, sizeof conn_grant_seg); //copy buffer to segment
+
+  //Assign a sequence number as initial client sequence number + 1 with an acknowledgement number equal to initial server sequence number + 1
+  conn_grant_seg.seq += 1;
+  conn_grant_seg.ack += 1;
+  
+  //Set the ACK bit to 1
+  conn_grant_seg.hdr_flags |= ACK;
+  
+  //Compute the 16-bit checksum of the entire TCP segment and populate the checksum field
+  memcpy(cksum_arr, &conn_grant_seg, 24);
+  conn_grant_seg.cksum = compute_cksum(cksum_arr);
+
+  //respond to server with acknowledgent TCP segment
+  bzero(tcp_char_seg,255);
+  memcpy(tcp_char_seg, &conn_grant_seg, sizeof conn_grant_seg);
+  
+  num_sent = write(sockfd, tcp_char_seg, 255); //write back to server
+  if (num_sent < 0)
+  {
+    printf("error writing to socket...\n");
+    exit(1);
+  }
   return 0;
 }
