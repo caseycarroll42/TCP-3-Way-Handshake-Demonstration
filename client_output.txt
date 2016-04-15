@@ -1,0 +1,85 @@
+source port:		48605
+destination:		6664
+sequence:		100
+acknowledgement:	0
+hdr_flags: SYN = 1
+hdr flag actual value:		0x01
+receive window:		0
+checksum:		0x2796
+data pointer:		0
+options:		0
+-----------
+
+source port:		6664
+destination:		48605
+sequence:		200
+acknowledgement:	101
+hdr_flags: SYN = 1
+hdr_flags: ACK = 1
+hdr flag actual value:		0x03
+receive window:		0
+checksum:		0x4E61
+data pointer:		0
+options:		0
+-----------
+
+source port:		48605
+destination:		6664
+sequence:		200
+acknowledgement:	201
+hdr_flags: ACK = 1
+hdr flag actual value:		0x02
+receive window:		0
+checksum:		0x74C9
+data pointer:		0
+options:		0
+-----------
+
+source port:		48605
+destination:		6664
+sequence:		100
+acknowledgement:	0
+hdr_flags: FIN = 1
+hdr flag actual value:		0x04
+receive window:		0
+checksum:		0x1EAF
+data pointer:		0
+options:		0
+-----------
+
+source port:		6664
+destination:		48605
+sequence:		100
+acknowledgement:	101
+hdr_flags: ACK = 1
+hdr flag actual value:		0x02
+receive window:		0
+checksum:		0x3CFB
+data pointer:		0
+options:		0
+-----------
+
+source port:		6664
+destination:		48605
+sequence:		200
+acknowledgement:	200
+hdr_flags: ACK = 1
+hdr flag actual value:		0x02
+receive window:		0
+checksum:		0x5AE1
+data pointer:		0
+options:		0
+-----------
+
+source port:		56765
+destination:		6664
+sequence:		0
+acknowledgement:	0
+hdr_flags: FIN = 1
+hdr flag actual value:		0x04
+receive window:		0
+checksum:		0x0836
+data pointer:		0
+options:		0
+-----------
+
