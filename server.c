@@ -36,6 +36,7 @@ unsigned int compute_cksum(unsigned short int * cksum_arr); //computes checksum
 int recv_conn_req(int accept_sock);
 int recv_ack_seg(int accept_sock);
 int recv_close_req(int accept_sock);
+int recv_close_ack(int accept_sock);
 void print_tcp_seg(struct tcp_hdr *tcp_seg);
 
 int main(int argc, char **argv)
@@ -63,6 +64,8 @@ int main(int argc, char **argv)
 	printf("\t\tPART 2\n");
 	//handle the close connection request from client
 	recv_close_req(accept_sock);
+
+	recv_close_ack(accept_sock);
 
 	return 0;
 }
@@ -343,4 +346,23 @@ void print_tcp_seg(struct tcp_hdr *tcp_seg)
   	fclose(fp);
 
 	return;
+}
+
+int recv_close_ack(int accept_sock)
+{
+	int num_data_recv;
+	char buffer[255];
+	struct tcp_hdr tcp_close_seg;
+	/* receive acknowledgement TCP segment from client */
+	num_data_recv = read(accept_sock, buffer, 255);
+	if (num_data_recv < 0)
+	{
+		printf("error receiving data from socket\n");
+		exit(1);
+	}
+
+	memcpy(&tcp_close_seg, buffer, sizeof tcp_close_seg);
+
+	printf("-----RECEIVED CLOSE ACKNOWLEDGEMENT SEGMENT-----\n");
+	print_tcp_seg(&tcp_close_seg);	
 }

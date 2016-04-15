@@ -371,7 +371,7 @@ int send_final_close_ack(uint32_t source_port, int portno, int sockfd)
   memcpy(cksum_arr, &close_req_seg, 24);
   close_req_seg.cksum = compute_cksum(cksum_arr);
 
-  printf("-----CLOSE REQUEST TO SERVER-----\n");
+  printf("-----CLOSE ACKNOWLEDGEMENT TO SERVER-----\n");
   print_tcp_seg(&close_req_seg);
 
   memcpy(tcp_char_seg, &close_req_seg, sizeof close_req_seg);
